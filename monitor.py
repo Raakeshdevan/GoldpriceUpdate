@@ -11,9 +11,14 @@ def get_price():
     r = requests.get(URL, timeout=10)
     soup = BeautifulSoup(r.text, "html.parser")
 
-    row = soup.find("td", string="22 Carat")
-    price = row.find_next("td").text.strip()
-    return price
+    for td in soup.find_all("td"):
+        text = td.get_text(strip=True)
+        if "22" in text and "Carat" in text:
+            price_td = td.find_next_sibling("td")
+            if price_td:
+                return price_td.get_text(strip=True)
+
+    raise Exception("22K price not found")
 
 def send_telegram(msg):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
