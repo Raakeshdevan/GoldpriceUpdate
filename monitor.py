@@ -5,7 +5,16 @@ import os
 URL = "https://www.goodreturns.in/gold-rates/coimbatore.html"
 
 BOT_TOKEN = os.environ["BOT_TOKEN"]
+# Old single chat
 CHAT_ID = os.environ["CHAT_ID"]
+
+# New group chat
+CHAT_ID = int(os.environ["CHAT_ID"])  # use negative number
+
+def send_telegram(msg, chat_id=CHAT_ID):
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    requests.post(url, json={"chat_id": chat_id, "text": msg})
+
 def get_price():
     r = requests.get(
         URL,
