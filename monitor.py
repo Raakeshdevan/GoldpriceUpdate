@@ -4,8 +4,8 @@ import os
 
 URL = "https://www.goodreturns.in/gold-rates/coimbatore.html"
 
-BOT_TOKEN = os.environ["7794314682:AAHmlLGeN-xmF4Pi5uJCPJszjBCxfEmGPZk"]
-CHAT_ID = os.environ["820991371"]
+BOT_TOKEN = os.environ["BOT_TOKEN"]
+CHAT_ID = os.environ["CHAT_ID"]
 
 def get_price():
     r = requests.get(URL, timeout=10)
