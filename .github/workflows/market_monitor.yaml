@@ -1,0 +1,61 @@
+name: Market Monitor
+
+on:
+  schedule:
+    - cron: "0 3 * * 1-5"
+    - cron: "50 3 * * 1-5"
+    - cron: "0 15 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      job:
+        description: "Which job to run manually"
+        required: true
+        default: "pre_market"
+        type: choice
+        options:
+          - pre_market
+          - market_open
+          - eod_report
+
+jobs:
+  pre_market:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.job == 'pre_market' || github.event_name == 'schedule' && startsWith(github.event.schedule, '0 3')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - run: pip install requests beautifulsoup4 pillow pytz
+      - run: python MarketUpdate/pre_market.py
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          MARKET_CHAT_ID: ${{ secrets.MARKET_CHAT_ID }}
+
+  market_open:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.job == 'market_open' || github.event_name == 'schedule' && startsWith(github.event.schedule, '50 3')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - run: pip install requests beautifulsoup4 pillow pytz
+      - run: python MarketUpdate/market_open.py
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          MARKET_CHAT_ID: ${{ secrets.MARKET_CHAT_ID }}
+
+  eod_report:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.job == 'eod_report' || github.event_name == 'schedule' && startsWith(github.event.schedule, '0 15')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - run: pip install requests beautifulsoup4 pillow pytz
+      - run: python MarketUpdate/eod_report.py
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          MARKET_CHAT_ID: ${{ secrets.MARKET_CHAT_ID }}
