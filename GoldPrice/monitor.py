@@ -34,7 +34,7 @@ def parse_price(price_str):
 price_str = get_price()
 
 try:
-    with open("last_price.txt") as f:
+    with open("GoldPrice/last_price.txt") as f:
         last_str = f.read().strip()
 except:
     last_str = ""
@@ -54,5 +54,5 @@ if price_str != last_str:
         f"22K: {price_str}\n"
         f"{change_line}"
     )
-    with open("last_price.txt", "w") as f:
+    with open("GoldPrice/last_price.txt", "w") as f:
         f.write(price_str)
