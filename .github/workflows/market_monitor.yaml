@@ -10,7 +10,7 @@ on:
       job:
         description: "Which job to run manually"
         required: true
-        default: "pre_market"
+        default: "Market_open"
         type: choice
         options:
           - pre_market
