@@ -2,60 +2,137 @@ name: Market Monitor
 
 on:
   schedule:
-    - cron: "0 3 * * 1-5"
-    - cron: "50 3 * * 1-5"
-    - cron: "0 15 * * 1-5"
+    - cron: "0 3 * * 1-5"    # 8:30 AM IST
+    - cron: "50 3 * * 1-5"   # 9:20 AM IST
+    - cron: "0 15 * * 1-5"   # 8:30 PM IST
   workflow_dispatch:
     inputs:
-      job:
-        description: "Which job to run manually"
+      mode:
+        description: "Run mode"
         required: true
-        default: "Market_open"
+        default: "catch_up"
         type: choice
         options:
+          - catch_up
           - pre_market
           - market_open
           - eod_report
 
 jobs:
   pre_market:
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.job == 'pre_market' || github.event_name == 'schedule' && startsWith(github.event.schedule, '0 3')
+    if: github.event_name == 'schedule' && github.event.schedule == '0 3 * * 1-5'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.10"
+
       - run: pip install requests beautifulsoup4 pillow pytz
+
       - run: python MarketUpdate/Pre_market.py
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           MARKET_CHAT_ID: ${{ secrets.MARKET_CHAT_ID }}
 
   market_open:
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.job == 'market_open' || github.event_name == 'schedule' && startsWith(github.event.schedule, '50 3')
+    if: github.event_name == 'schedule' && github.event.schedule == '50 3 * * 1-5'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.10"
+
       - run: pip install requests beautifulsoup4 pillow pytz
+
       - run: python MarketUpdate/Market_open.py
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           MARKET_CHAT_ID: ${{ secrets.MARKET_CHAT_ID }}
 
   eod_report:
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.job == 'eod_report' || github.event_name == 'schedule' && startsWith(github.event.schedule, '0 15')
+    if: github.event_name == 'schedule' && github.event.schedule == '0 15 * * 1-5'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.10"
+
       - run: pip install requests beautifulsoup4 pillow pytz
+
       - run: python MarketUpdate/Eod_report.py
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           MARKET_CHAT_ID: ${{ secrets.MARKET_CHAT_ID }}
+
+  manual_run:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - run: pip install requests beautifulsoup4 pillow pytz
+
+      - name: Run manual / catch-up mode
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          MARKET_CHAT_ID: ${{ secrets.MARKET_CHAT_ID }}
+          MODE: ${{ github.event.inputs.mode }}
+        run: |
+          python - <<'PY'
+          import os
+          import subprocess
+          from datetime import datetime
+          import pytz
+
+          mode = os.environ["MODE"]
+          ist = pytz.timezone("Asia/Kolkata")
+          now = datetime.now(ist)
+          current_minutes = now.hour * 60 + now.minute
+
+          pre_market_time = 8 * 60 + 30   # 08:30 IST
+          market_open_time = 9 * 60 + 20  # 09:20 IST
+          eod_time = 20 * 60 + 30         # 20:30 IST
+
+          print(f"Current IST time: {now.strftime('%Y-%m-%d %I:%M %p')}")
+
+          def run_script(script):
+              print(f"\n>>> Running {script}")
+              subprocess.run(["python", script], check=True)
+
+          if mode == "pre_market":
+              run_script("MarketUpdate/Pre_market.py")
+
+          elif mode == "market_open":
+              run_script("MarketUpdate/Market_open.py")
+
+          elif mode == "eod_report":
+              run_script("MarketUpdate/Eod_report.py")
+
+          elif mode == "catch_up":
+              if current_minutes >= pre_market_time:
+                  run_script("MarketUpdate/Pre_market.py")
+              else:
+                  print("Skipping Pre_market.py (time not reached yet)")
+
+              if current_minutes >= market_open_time:
+                  run_script("MarketUpdate/Market_open.py")
+              else:
+                  print("Skipping Market_open.py (time not reached yet)")
+
+              if current_minutes >= eod_time:
+                  run_script("MarketUpdate/Eod_report.py")
+              else:
+                  print("Skipping Eod_report.py (time not reached yet)")
+          else:
+              raise ValueError(f"Unknown mode: {mode}")
+          PY
