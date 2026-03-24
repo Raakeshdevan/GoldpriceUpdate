@@ -27,7 +27,7 @@ jobs:
         with:
           python-version: "3.10"
       - run: pip install requests beautifulsoup4 pillow pytz
-      - run: python MarketUpdate/pre_market.py
+      - run: python MarketUpdate/Pre_market.py
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           MARKET_CHAT_ID: ${{ secrets.MARKET_CHAT_ID }}
@@ -41,7 +41,7 @@ jobs:
         with:
           python-version: "3.10"
       - run: pip install requests beautifulsoup4 pillow pytz
-      - run: python MarketUpdate/market_open.py
+      - run: python MarketUpdate/Market_open.py
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           MARKET_CHAT_ID: ${{ secrets.MARKET_CHAT_ID }}
@@ -55,7 +55,7 @@ jobs:
         with:
           python-version: "3.10"
       - run: pip install requests beautifulsoup4 pillow pytz
-      - run: python MarketUpdate/eod_report.py
+      - run: python MarketUpdate/Eod_report.py
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           MARKET_CHAT_ID: ${{ secrets.MARKET_CHAT_ID }}
