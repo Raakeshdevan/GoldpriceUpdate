@@ -36,43 +36,28 @@ current_price = parse_price(price_str)
 
 try:
     with open("GoldPrice/last_price.txt") as f:
-        last_str = f.read().strip()
+        last_price = parse_price(f.read().strip())
 except:
-    last_str = ""
+    last_price = None
 
-last_price = None
-if last_str:
-    try:
-        last_price = parse_price(last_str)
-    except:
-        last_price = None
-
-print(f"DEBUG -> Current scraped raw: {price_str}")
-print(f"DEBUG -> Current parsed: {current_price}")
-print(f"DEBUG -> Last stored raw: {last_str}")
-print(f"DEBUG -> Last stored parsed: {last_price}")
-
-# Compare normalized numeric values instead of raw strings
 if last_price is None or current_price != last_price:
-    if last_price is not None:
+    if last_price is not None and current_price != last_price:
         diff = current_price - last_price
         if diff > 0:
             change_line = f"▲ Increased by ₹{diff:.0f}"
-        elif diff < 0:
-            change_line = f"▼ Decreased by ₹{abs(diff):.0f}"
         else:
-            change_line = "ℹ️ No actual price change"
-    else:
-        change_line = "ℹ️ First reading recorded"
+            change_line = f"▼ Decreased by ₹{abs(diff):.0f}"
+        send_telegram(
+            f"🔔 Gold Price Update – Coimbatore\n"
+            f"22K: ₹{current_price:,.0f}\n"
+            f"{change_line}"
+        )
+    elif last_price is None:
+        send_telegram(
+            f"🔔 Gold Price Update – Coimbatore\n"
+            f"22K: ₹{current_price:,.0f}\n"
+            f"ℹ️ First reading recorded"
+        )
 
-    send_telegram(
-        f"🔔 Gold Price Update – Coimbatore\n"
-        f"22K: ₹{current_price:,.2f}\n"
-        f"{change_line}"
-    )
-
-    # Always write normalized format so future comparisons are stable
     with open("GoldPrice/last_price.txt", "w") as f:
         f.write(f"{current_price:.2f}")
-else:
-    print("No price change detected. Telegram message skipped.")
