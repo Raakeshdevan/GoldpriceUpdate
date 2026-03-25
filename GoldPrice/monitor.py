@@ -36,8 +36,11 @@ current_price = parse_price(price_str)
 
 try:
     with open("GoldPrice/last_price.txt") as f:
-        last_price = parse_price(f.read().strip())
-except:
+        content = f.read().strip()
+        print(f"Read from file: '{content}'")
+        last_price = parse_price(content)
+except Exception as e:
+    print(f"File read error: {e}")
     last_price = None
 
 if last_price is None or current_price != last_price:
