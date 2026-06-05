@@ -1,5 +1,5 @@
 import requests
-from bs4 import BeautifulSoup
+import re
 import os
 
 URL = "https://www.goodreturns.in/gold-rates/coimbatore.html"
@@ -12,21 +12,10 @@ def send_telegram(msg):
 
 def get_price():
     r = requests.get(URL, timeout=10, headers={"User-Agent": "Mozilla/5.0"})
-    soup = BeautifulSoup(r.text, "html.parser")
-    section = soup.find(
-        "section",
-        attrs={"data-gr-title": lambda x: x and "22 Carat Gold Price" in x}
-    )
-    if not section:
-        raise Exception("22K section not found")
-    table = section.find("table")
-    if not table:
-        raise Exception("Price table not found")
-    for row in table.tbody.find_all("tr"):
-        cols = row.find_all("td")
-        if cols[0].get_text(strip=True) == "1":
-            return cols[1].get_text(strip=True)
-    raise Exception("1 gram price not found")
+    match = re.search(r"currentMetalPrices\s*=\s*\{[^}]+'22'\s*:\s*([\d]+)", r.text)
+    if not match:
+        raise Exception("22K price not found in page source")
+    return match.group(1)
 
 def parse_price(price_str):
     return round(float(str(price_str).replace("₹", "").replace(",", "").strip()), 2)
@@ -61,6 +50,5 @@ if last_price is None or current_price != last_price:
             f"22K: ₹{current_price:,.0f}\n"
             f"ℹ️ First reading recorded"
         )
-
     with open("GoldPrice/last_price.txt", "w") as f:
         f.write(f"{current_price:.2f}")
